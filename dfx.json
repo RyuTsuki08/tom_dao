@@ -1,0 +1,28 @@
+{
+  "canisters": {
+    "tom_dao_backend": {
+      "main": "src/tom_dao_backend/main.mo",
+      "type": "motoko"
+    },
+    "tom_dao_frontend": {
+      "dependencies": [
+        "tom_dao_backend"
+      ],
+      "frontend": {
+        "entrypoint": "src/tom_dao_frontend/src/index.html"
+      },
+      "source": [
+        "src/tom_dao_frontend/assets",
+        "dist/tom_dao_frontend/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "version": 1
+}
