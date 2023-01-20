@@ -1,27 +1,42 @@
 {
   "canisters": {
-    "tom_dao_backend": {
-      "main": "src/tom_dao_backend/main.mo",
+    "webpage": {
+      "main": "./src/webpage/main.mo",
       "type": "motoko"
     },
-    "tom_dao_frontend": {
+    "dao": {
+      "main": "./src/dao/main.mo",
+      "type": "motoko"
+    },
+    "assets": {
       "dependencies": [
-        "tom_dao_backend"
+        "webpage",
+        "dao"
       ],
       "frontend": {
-        "entrypoint": "src/tom_dao_frontend/src/index.html"
+        "entrypoint": "dist/index.html"
       },
       "source": [
-        "src/tom_dao_frontend/assets",
-        "dist/tom_dao_frontend/"
+        "dist/"
       ],
       "type": "assets"
     }
   },
   "defaults": {
     "build": {
-      "args": "",
       "packtool": ""
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    },
+    "ic": {
+      "providers": [
+        "https://mainnet.dfinity.network"
+      ],
+      "type": "persistent"
     }
   },
   "version": 1
