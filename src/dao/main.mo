@@ -39,7 +39,7 @@ actor DAO_TOM{
     };
 
     // This function submit a proposal for be draw in the front
-    public func create_proposal(new_text: Text, new_amount: Nat): async Result.Result<T.ProposalSuccess, T.ErrorProposal> { //
+    public shared ({caller}) func create_proposal(new_text: Text, new_amount: Nat): async Result.Result<T.ProposalSuccess, T.ErrorProposal> { //
         
         proposalId += 1;
 
@@ -119,20 +119,12 @@ actor DAO_TOM{
     };
 
     // This functions you can vote just only you get a Token MB in your wallet ... !!!! Principal type in param
-    public func vote(id: Nat): async Result.Result<T.ProposalSuccess, Text>{
+    public shared ({caller}) func vote(id: Nat): async Result.Result<T.ProposalSuccess, Text>{
         var proposalRes = Trie.find(
             proposals,
             keyNat(id),
             Nat.equal
         );
-
-        // var addVotes = {
-        //     text: Text = proposalResult;
-        //     amount: Nat = 1;
-        //     state = #OnHold; 
-        //     votes = 0;
-        // };
-
 
         switch(proposalRes) {
             case(null) { 
@@ -155,6 +147,60 @@ actor DAO_TOM{
 
             return #ok(addVotes);
 
+            };
+        };
+    };
+
+    private func updated_proposal(id: Nat, new_text: Text): async Result.Result<T.ProposalSuccess, Text>{
+        var proposalRes = Trie.find(
+            proposals,
+            keyNat(id),
+            Nat.equal
+        );
+
+        switch(proposalRes) {
+            case(null) { 
+                return #err("No exists Proposal");
+             };
+            case(?proposalRes) { 
+                var updatedValues: T.ProposalSuccess = {
+                    amount = proposalRes.amount;
+                    state = proposalRes.state;
+                    text = new_text;
+                    votes = proposalRes.votes;
+                };
+
+                proposals := Trie.replace(
+                    proposals,
+                    keyNat(id),
+                    Nat.equal,
+                    ?updatedValues
+                ).0;
+                
+            return #ok(updatedValues);
+            };
+        };
+    };
+
+    private func remove_proposal(id: Nat): async Result.Result<T.ProposalSuccess, Text>{
+        var proposalRes = Trie.find(
+            proposals,
+            keyNat(id),
+            Nat.equal
+        );
+
+        switch(proposalRes) {
+            case(null) { 
+                return #err("No exists Proposal");
+             };
+            case(?proposalRes) { 
+                proposals := Trie.replace(
+                    proposals,
+                    keyNat(id),
+                    Nat.equal,
+                    null
+                ).0;
+            return #ok(proposalRes);
             };
         };
     };
