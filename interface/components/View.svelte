@@ -6,22 +6,24 @@
   async function get_all_proposals() {
     let dao = get(daoActor);
     if (!dao) {
-      return
+      return dao
     }
     let res = await dao.get_all_proposals()
     console.log("Proposals", res)
     return res
   }
-  let promise =  get_all_proposals()
+  
+  
 </script>
 
 {#if $principal}
-  {#await promise}
+  {#await get_all_proposals()}
     <p>Loading...</p>
   {:then proposals}
     <div id="proposals">
       <h1>Proposals</h1>
       {#each proposals as post}
+      {console.log(proposals)}
         <Proposal {post} />
       {/each}
     </div>

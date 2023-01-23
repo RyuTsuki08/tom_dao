@@ -4,7 +4,9 @@ import Principal "mo:base/Principal";
 import Trie "mo:base/Trie";
 import Hash "mo:base/Hash";
 import Nat "mo:base/Nat";
+import Text "mo:base/Text";
 import T "./Types";
+import U "./utils/Account";
 import Result "mo:base/Result";
 import Prelude "mo:base/Prelude";
 import Iter "mo:base/Iter";
@@ -21,51 +23,56 @@ actor DAO_TOM{
 
     stable var proposalId: Nat = 0;
 
+    public type Subaccount = [Nat8];
+
+    public type Account__1 = { owner : Principal; subaccount : ?Subaccount };
+
     //utils -> Key Nat -> Id for Trie...
      private func keyNat(x : Nat) : Trie.Key<Nat> {
       return { key = x; hash = Hash.hash(x) }
     };
 
-    public shared ({caller}) func verify_mbTokens(): async Nat{
+    // public shared ({caller}) func verify_payment(): async Nat{
 
+    // };
+
+    public shared ({caller}) func verify_balance(): async Text{
     let mb_tokens = actor("db3eq-6iaaa-aaaah-abz6a-cai") : actor {
-      icrc1_balance_of : query (Principal) -> async (Nat) 
+      icrc1_balance_of : shared query (Account__1) -> async Nat ;
+      icrc1_name : shared query () -> async Text;
     };
 
-    var result = await mb_tokens.icrc1_balance_of(caller);
+    var subAccountWithPrincipal = U.principalToSubaccount(caller);
+    var subAccount = U.accountIdentifier(caller, subAccountWithPrincipal);
+
+    var accountId = {
+        owner = caller;
+        subaccount = Text.decodeUtf8(subAccount);
+    };
+
+    print(debug_show(accountId));
+
+    var result = await mb_tokens.icrc1_name();
+
+    print(debug_show(result));
 
     return result;
 
     };
 
     // This function submit a proposal for be draw in the front
-    public shared ({caller}) func create_proposal(new_text: Text, new_amount: Nat): async Result.Result<T.ProposalSuccess, T.ErrorProposal> { //
+    public shared ({caller}) func submit_proposal(new_text: Text): async Result.Result<T.ProposalSuccess, T.ErrorProposal> { //
         
         proposalId += 1;
 
        var newProposal = {
             text: Text = new_text;
+            principalId= caller;
             amount: Nat = 1;
             state = #OnHold; 
             votes = 0;
        };
 
-        if(new_amount > 1){
-            print("You can't submit more of 1MB");
-            newProposal := {
-            text: Text = new_text;
-            amount: Nat = 1;
-            state = #OnHold; 
-            votes = 0;
-        }
-        }else{
-            newProposal := {
-            text: Text = new_text;
-            amount: Nat = new_amount;
-            state = #OnHold; 
-            votes = 0;
-        }
-        };
 
         let (newProposalResult, exists) = Trie.put(
             proposals,
@@ -107,7 +114,7 @@ actor DAO_TOM{
     };
 
     // This function get all proposals in the Trie?? HashMap ??
-    public func get_all_proposal() : async Result.Result<[(Nat, T.Proposal)], Text>{
+    public query func get_all_proposals() : async Result.Result<[(Nat, T.Proposal)], Text>{
     var allProposals = Iter.toArray(Trie.iter(proposals));
 
     if(allProposals == []){
@@ -133,6 +140,7 @@ actor DAO_TOM{
             case(?proposalRes) { 
                 var addVotes: T.Proposal = {
                     amount = proposalRes.amount;
+                    principalId = proposalRes.principalId;
                     state = proposalRes.state;
                     text = proposalRes.text;
                     votes = proposalRes.votes + 1;
@@ -151,7 +159,7 @@ actor DAO_TOM{
         };
     };
 
-    private func updated_proposal(id: Nat, new_text: Text): async Result.Result<T.ProposalSuccess, Text>{
+    public shared ({caller}) func updated_proposal(id: Nat, new_text: Text): async Result.Result<T.ProposalSuccess, Text>{
         var proposalRes = Trie.find(
             proposals,
             keyNat(id),
@@ -166,6 +174,7 @@ actor DAO_TOM{
                 var updatedValues: T.ProposalSuccess = {
                     amount = proposalRes.amount;
                     state = proposalRes.state;
+                    principalId = caller;
                     text = new_text;
                     votes = proposalRes.votes;
                 };

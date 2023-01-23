@@ -10,6 +10,7 @@ module {
 
     public type Proposal = {
         text: Text;
+        principalId: Principal;
         amount: Nat;
         state: State;
         votes: Nat;
@@ -17,6 +18,7 @@ module {
 
     public type ProposalSuccess = {
         text: Text;
+        principalId: Principal;
         amount: Nat;
         state: State;
         votes: Nat;

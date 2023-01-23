@@ -10,12 +10,12 @@
   let voteid = ""
   let id = ""
 
-  async function vote(thisid, votepayload) {
+  async function vote(thisid) {
     let dao = get(daoActor)
     if (!dao) {
       return 
     }
-    let res = await dao.vote(BigInt(thisid), votepayload)
+    let res = await dao.vote(BigInt(thisid))
     if (res.Ok) {
       return res.Ok
     } else {
@@ -37,13 +37,13 @@
     }
   }
 
-  let promise = vote(voteid, choosenvote)
+  let promise = vote(voteid)
   let promise2 = get_proposal(id)
 
   function handleVoteClick(payload) {
     choosenvote = payload
     voteid = id
-    promise = vote(voteid, choosenvote)
+    promise = vote(voteid)
     $hasvoted = true
   }
 
